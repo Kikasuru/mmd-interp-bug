@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+
+        <title>Uwawawawa!!</title>
+        <link id="favicon" rel="icon" href="assets/favicon.png" type='image/png'/>
+
+        <style>
+            body {
+                background: #1F1C3A;
+                margin: 0;
+            }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script type="module">
+            import * as THREE from 'https://cdn.skypack.dev/three@0.131.3';
+
+            import { MMDLoader } from 'https://cdn.skypack.dev/three@0.131.3/examples/jsm/loaders/MMDLoader.js';
+			import { MMDAnimationHelper } from 'https://cdn.skypack.dev/three@0.131.3/examples/jsm/animation/MMDAnimationHelper.js';
+
+            let mesh, camera, scene, renderer, effect;
+            let helper;
+
+            let ready = false;
+
+            let clock = new THREE.Clock();
+
+            $(document).ready(init);
+            function init() {
+                camera = new THREE.PerspectiveCamera( 10, window.innerWidth / window.innerHeight, 1, 2000 );
+
+                scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x1F1C3A );
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+                const koakumaModel = "./assets/mmd/koakuma.pmx";
+                const floatAnim = "./assets/mmd/koa_float.vmd";
+                const cameraAnim = "./assets/mmd/koa_float_camera.vmd";
+
+                helper = new MMDAnimationHelper();
+				const loader = new MMDLoader();
+
+                // Get camera parameters
+                loader.loadAnimation(cameraAnim, camera,
+                    (anim) => {
+                        helper.add( camera, {
+							animation: anim
+						});
+                    }
+                )
+
+                loader.loadWithAnimation(koakumaModel, floatAnim,
+                    // On load
+                    (mmd) => {
+                        mesh = mmd.mesh;
+
+                        helper.add( mesh, {
+    						animation: mmd.animation,
+    						physics: false // not dealing with mmd's jank physics
+    					} );
+
+                        scene.add( mesh );
+
+                        ready = true;
+						animate();
+                    },
+
+                    // On Progress
+                    (xhr) => {
+                        // TODO: Make this do a progress bar
+                    },
+
+                    // On Error
+                    (err) => {
+                        console.error(err);
+                    }
+                )
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                if (ready) {
+                    renderer.render(scene, camera);
+                    helper.update(clock.getDelta());
+                }
+            }
+
+            $(window).resize(onResize);
+            function onResize() {
+                // Update the camera
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                // Resize the canvas
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        </script>
+    </head>
+    <body>
+
+    </body>
+</html>
